@@ -1,13 +1,28 @@
-export const errorResponserHandler = (err, req, res, next) => {
-  const statusCode = err.statusCode || 400;
-  res.status(statusCode).json({
-    message: err.message,
-    stack: process.env.NODE_ENV === "production" ? null : err.stack,
-  });
-};
+import express from "express";
+import dotenv from "dotenv";
+import connectDB from "./config/db";
+import {
+  errorResponserHandler,
+  invalidPathHandler,
+} from "./middleware/errorHandler";
 
-export const invalidPathHandler = (req, res, next) => {
-  let error = new Error("Invalid Path");
-  error.statusCode = 404;
-  next(error);
-};
+// Routes
+import userRoutes from "./routes/userRoutes";
+
+dotenv.config();
+connectDB();
+const app = express();
+app.use(express.json());
+
+app.get("/", (req, res) => {
+  res.send("Server is running...");
+});
+
+app.use("/api/users", userRoutes);
+
+app.use(invalidPathHandler);
+app.use(errorResponserHandler);
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
